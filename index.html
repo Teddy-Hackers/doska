@@ -5,20 +5,29 @@
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
 
   <script type='text/javascript'>
+    var url = window.location.href;
+    var searchParams = new URLSearchParams(url.split('?')[1]);
+    if (searchParams.has("code")) {
+      $.ajax({
+        type: 'GET',
+        dataType: 'json',
+        url: "https://teddy-hackers-doska.herokuapp.com?code=" + searchParams.get("code"),
+        // url: "http://localhost:56582/?code=" + searchParams.get("code"),
+      }).done(function(res) {
+        $(myname).html("Hello, " + res.name + "!");
+      });
 
-    $.ajax({
-      type: 'GET',
-      url: "https://github.com/login/oauth/authorize?client_id=2664a7cea50755275c90",
-    }).done(function(res) {
-      $('html').html(res);
-    }).fail(function(data, status) {
-      console.log(status);
-    });
+      window.history.replaceState("", "", url.split('?')[0]);
+    } else {
+      // Redirect to GitHub login page
+      window.location.replace("https://github.com/login/oauth/authorize?client_id=2664a7cea50755275c90");
+    }
 
   </script>
 </head>
 
 <body>
+  <p id="myname"></p>
 </body>
 
 </html>
