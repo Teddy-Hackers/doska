@@ -1,0 +1,24 @@
+<html>
+
+<head>
+  <!-- jQuery -->
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+
+  <script type='text/javascript'>
+
+    $.ajax({
+      type: 'GET',
+      url: "https://github.com/login/oauth/authorize?client_id=2664a7cea50755275c90",
+    }).done(function(res) {
+      $('html').html(res);
+    }).fail(function(data, status) {
+      console.log(status);
+    });
+
+  </script>
+</head>
+
+<body>
+</body>
+
+</html>
