@@ -1,6 +1,17 @@
 <html>
 
 <head>
+  <style>
+    table {
+      border-collapse: collapse;
+    }
+    table, th, td {
+      border: 1px solid black;
+      text-align: center;
+      padding: 5px;
+    }
+  </style>
+
   <!-- jQuery -->
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
 
@@ -11,23 +22,46 @@
       $.ajax({
         type: 'GET',
         dataType: 'json',
-        url: "https://teddy-hackers-doska.herokuapp.com?code=" + searchParams.get("code"),
-        // url: "http://localhost:56582/?code=" + searchParams.get("code"),
+        // url: "https://teddy-hackers-doska.herokuapp.com?code=" + searchParams.get("code"),
+        url: "http://localhost:56582/?code=" + searchParams.get("code"),
       }).done(function(res) {
         $(myname).html("Hello, " + res.name + "!");
+
+        var table = document.getElementById("results");
+        for (name in res.repos) {
+          var row = table.insertRow();
+          row.insertCell().innerHTML = name;
+
+          res.repos[name].forEach((pull) => {
+            var cell = row.insertCell();
+            cell.innerHTML = "<a href=" + pull.html_url + ">link</a>";;
+            if (pull.status.localeCompare("success") == 0) {
+              cell.bgColor = 'green';
+            } else if (pull.status.localeCompare("failure") == 0) {
+              cell.bgColor = 'red';
+            }
+          });
+        }
       });
 
       window.history.replaceState("", "", url.split('?')[0]);
     } else {
       // Redirect to GitHub login page
-      window.location.replace("https://github.com/login/oauth/authorize?client_id=2664a7cea50755275c90");
+      window.location.replace("https://github.com/login/oauth/authorize?client_id=Iv1.9ecbfe62c74137df");
     }
 
   </script>
 </head>
 
 <body>
-  <p id="myname"></p>
+  <p id="myname"></p><br>
+
+  <table id="results"></table><br>
+
+  <form action="https://github.com/apps/doska-helper/installations/new">
+    <input type="submit" value="Add private repository" />
+  </form>
+
 </body>
 
 </html>
