@@ -22,8 +22,8 @@
       $.ajax({
         type: 'GET',
         dataType: 'json',
-        // url: "https://teddy-hackers-doska.herokuapp.com?code=" + searchParams.get("code"),
-        url: "http://localhost:56582/?code=" + searchParams.get("code"),
+        url: "https://teddy-hackers-doska.herokuapp.com?code=" + searchParams.get("code"),
+        // url: "http://localhost:56582/?code=" + searchParams.get("code"),
       }).done(function(res) {
         $(myname).html("Hello, " + res.name + "!");
 

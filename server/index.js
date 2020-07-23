@@ -28,7 +28,11 @@ function getName(token, callback) {
 function getStatus(pull, token, callback) {
   var url = pull.head.repo.url + '/commits/' + pull.head.sha + '/check-suites';
   github_api_get(url, token, (data) => {
-    callback(data.check_suites[0].conclusion);
+    var status = 'neutral';
+    if (data.check_suites.length > 0) {
+      status = data.check_suites[0].conclusion;
+    }
+    callback(status);
   });
 }
 
@@ -44,22 +48,29 @@ function listPulls(token, repo, user, callback) {
   .then((res) => {
     var out = [];
     var pulls = res.data;
-
-    function next(i, callback) {
-      var pull_data = {};
-      pull_data.html_url = pulls[i].html_url;
-      getStatus(pulls[i], token, (data) => {
-        pull_data.status = data;
-        out.push(pull_data);
-
-        if (i < pulls.length - 1) {
-          next(i + 1, callback);
-        } else {
-          callback(out);
-        }
-      });
+    if (pulls.length == 0) {
+      callback(out);
+      return;
     }
-    next(0, callback);
+
+    var num = 0;
+    function inc() {
+      num += 1;
+      if (num == pulls.length) {
+        callback(out);
+      }
+    }
+
+    pulls.forEach((pull, i) => {
+      var pull_data = {};
+      pull_data.html_url = pull.html_url;
+      out.push(undefined)
+      getStatus(pull, token, (data) => {
+        pull_data.status = data;
+        out[i] = pull_data;
+        inc();
+      });
+    });
   }).catch((err) => {
     console.error(err);
   });
@@ -67,15 +78,26 @@ function listPulls(token, repo, user, callback) {
 
 function listRepos(token, user_name, callback) {
   github_api_get('https://api.github.com/user/repos', token, (data) => {
+    var repos = {};
+
+    var num = 0;
+    function inc() {
+      num += 1;
+      if (num == data.length) {
+        callback(repos);
+      }
+    }
+
     data.forEach((repo) => {
       var name = repo.full_name;
       github_api_get('https://api.github.com/repos/' + repo.full_name, token, (data) => {
         if (data.parent && data.parent.owner.login.localeCompare(org_name) == 0) {
           listPulls(token, repo.name, user_name, (pulls) => {
-            var repos = {};
-            repos[repo.name] = pulls
-            callback(repos);
+            repos[repo.name] = pulls;
+            inc();
           });
+        } else {
+          inc();
         }
       });
     })
@@ -102,7 +124,6 @@ http.createServer(function (req, res) {
     var token_data = url.parse('?' + oauth_res.data, /*parseQueryString*/ true);
     getName(token_data.query.access_token, (name) => {
       listRepos(token_data.query.access_token, name, (repos) => {
-        console.log(name);
         responseData.name = name;
         responseData.repos = repos;
         res.setHeader('Access-Control-Allow-Origin', '*');
