@@ -13,7 +13,27 @@ function github_api_get(url, token, callback) {
     }
   })
   .then((res) => {
-    callback(res.data);
+    var data = res.data;
+
+    if (res.headers.link) {
+      var next_page = undefined;
+      res.headers.link.split(', ').forEach((link) => {
+        if (link.endsWith('rel="next"')) {
+          url = link.substr(1, link.indexOf('>') - 1);
+          next_page = url;
+        }
+      });
+      if (next_page) {
+        github_api_get(next_page, token, (page_data) => {
+          data = data.concat(page_data)
+          callback(data);
+        });
+      } else {
+        callback(data);  // This is last page
+      }
+    } else {
+      callback(data);  // Data is represented as a single page
+    }
   }).catch((err) => {
     console.error(err);
   });
@@ -77,7 +97,7 @@ function listPulls(token, repo, user, callback) {
 }
 
 function listRepos(token, user_name, callback) {
-  github_api_get('https://api.github.com/user/repos', token, (data) => {
+  github_api_get('https://api.github.com/user/repos?per_page=100', token, (data) => {
     var repos = {};
 
     var num = 0;
@@ -90,16 +110,20 @@ function listRepos(token, user_name, callback) {
 
     data.forEach((repo) => {
       var name = repo.full_name;
-      github_api_get('https://api.github.com/repos/' + repo.full_name, token, (data) => {
-        if (data.parent && data.parent.owner.login.localeCompare(org_name) == 0) {
-          listPulls(token, repo.name, user_name, (pulls) => {
-            repos[repo.name] = pulls;
+      if (repo.fork) {
+        github_api_get('https://api.github.com/repos/' + repo.full_name, token, (data) => {
+          if (data.parent.owner.login.localeCompare(org_name) == 0) {
+            listPulls(token, repo.name, user_name, (pulls) => {
+              repos[repo.name] = pulls;
+              inc();
+            });
+          } else {
             inc();
-          });
-        } else {
-          inc();
-        }
-      });
+          }
+        });
+      } else {
+        inc();
+      }
     })
   });
 }
