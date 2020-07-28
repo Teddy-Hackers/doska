@@ -17,7 +17,7 @@ function is_project_repo(repo) {
   return false;
 }
 
-function github_api_get(url, token, callback) {
+function github_api_get(url, token, callback, err_callback) {
   axios.get(url, {
     headers: {
       'Authorization': 'token ' + token,
@@ -47,7 +47,11 @@ function github_api_get(url, token, callback) {
       callback(data);  // Data is represented as a single page
     }
   }).catch((err) => {
-    console.error(err);
+    if (err_callback) {
+      err_callback(err)
+    } else {
+      console.error(err);
+    }
   });
 }
 
@@ -109,59 +113,45 @@ function listPulls(token, repo, user, callback) {
 }
 
 function listRepos(token, user_name, callback) {
-  github_api_get('https://api.github.com/user/repos?per_page=100', token, (data) => {
-    var repos = {};
+  var repos = {};
 
-    var num = 0;
-    function inc() {
-      num += 1;
-      if (num == data.length) {
-        callback(repos);
-      }
+  var num = 0;
+  function inc() {
+    num += 1;
+    if (num == repos_whitelist.length) {
+      callback(repos);
     }
+  }
 
-    data.forEach((repo) => {
-      var name = repo.full_name;
-      if (repo.fork) {
-        github_api_get('https://api.github.com/repos/' + repo.full_name, token, (data) => {
-          if (data.parent.owner.login.localeCompare(org_name) == 0) {
-            listPulls(token, repo.name, user_name, (pulls) => {
-              repos[repo.name] = pulls;
-              inc();
-            });
-          } else {
-            inc();
-          }
+  repos_whitelist.forEach((repo) => {
+    github_api_get('https://api.github.com/repos/' + user_name + '/' + repo, token, (data) => {
+      if (data.parent.owner.login.localeCompare(org_name) == 0) {
+        listPulls(token, repo, user_name, (pulls) => {
+          repos[repo] = pulls;
+          inc();
         });
       } else {
         inc();
       }
-    })
+    }, (err) => { /*in case of unforked repo*/ inc() });
   });
 }
 
 function listReposAdmin(token, callback) {
-  github_api_get('https://api.github.com/orgs/' + org_name + '/repos?per_page=100', token, (data) => {
-    var repos = {};
-    data.forEach((repo) => {
-      var name = repo.full_name;
-      if (is_project_repo(repo.name)) {
-        github_api_get(repo.forks_url, token, (forks) => {
-
-          var num = 0;
-          forks.forEach((fork) => {
-            listPulls(token, repo.name, fork.owner.login, (pulls) => {
-              repos[fork.owner.login] = pulls;
-              num += 1;
-              if (num == forks.length) {
-                callback(repos);
-              }
-            });
-          });
-
+  repos_whitelist.forEach((repo) => {
+    github_api_get('https://api.github.com/repos/' + org_name + '/' + repo + '/forks', token, (forks) => {
+      var repos = {};
+      var num = 0;
+      forks.forEach((fork) => {
+        listPulls(token, repo, fork.owner.login, (pulls) => {
+          repos[fork.owner.login] = pulls;
+          num += 1;
+          if (num == forks.length) {
+            callback(repos);
+          }
         });
-      }
-    })
+      });
+    }, (err) => {/*ignore missed repos*/});
   });
 }
 
@@ -191,23 +181,23 @@ http.createServer(function (req, res) {
       responseData.name = name;
 
       // Check user membership for an organization
-      axios.get('https://api.github.com/orgs/' + org_name + '/members/' + name, {
-        headers: {
-          'Authorization': 'token ' + token,
-        }
-      }).then(() => {
+      github_api_get('https://api.github.com/orgs/' + org_name + '/members/' + name, token,
         // User is inside the organization
-        listReposAdmin(token, (repos) => {
-          responseData.repos = repos;
-          res.end(JSON.stringify(responseData));
-        });
-      }).catch(() => {
+        () => {
+          listReposAdmin(token, (repos) => {
+            responseData.repos = repos;
+            res.end(JSON.stringify(responseData));
+          });
+        },
+
         // User is outside the organization
-        listRepos(token, name, (repos) => {
-          responseData.repos = repos;
-          res.end(JSON.stringify(responseData));
-        });
-      });
+        () => {
+          listRepos(token, name, (repos) => {
+            responseData.repos = repos;
+            res.end(JSON.stringify(responseData));
+          });
+        }
+      );
     });
   }).catch((err) => {
     console.error(err);
