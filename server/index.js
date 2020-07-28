@@ -1,9 +1,21 @@
 const http  = require('http');
 const url   = require('url');
 const axios = require('axios');
+const fs    = require('fs');
 
 const port = process.env.PORT || 80;
 const org_name = 'Teddy-Hackers'
+
+let repos_whitelist = JSON.parse(fs.readFileSync('server/repos_whitelist.json'));
+
+function is_project_repo(repo) {
+  for (var i = 0; i < repos_whitelist.length; i += 1) {
+    if (repos_whitelist[i].localeCompare(repo) == 0) {
+      return true;
+    }
+  }
+  return false;
+}
 
 function github_api_get(url, token, callback) {
   axios.get(url, {
@@ -128,6 +140,31 @@ function listRepos(token, user_name, callback) {
   });
 }
 
+function listReposAdmin(token, callback) {
+  github_api_get('https://api.github.com/orgs/' + org_name + '/repos?per_page=100', token, (data) => {
+    var repos = {};
+    data.forEach((repo) => {
+      var name = repo.full_name;
+      if (is_project_repo(repo.name)) {
+        github_api_get(repo.forks_url, token, (forks) => {
+
+          var num = 0;
+          forks.forEach((fork) => {
+            listPulls(token, repo.name, fork.owner.login, (pulls) => {
+              repos[fork.owner.login] = pulls;
+              num += 1;
+              if (num == forks.length) {
+                callback(repos);
+              }
+            });
+          });
+
+        });
+      }
+    })
+  });
+}
+
 http.createServer(function (req, res) {
   var requestData = url.parse(req.url, /*parseQueryString*/ true);
 
@@ -143,15 +180,33 @@ http.createServer(function (req, res) {
     code: requestData.query.code
   };
 
+  res.setHeader('Access-Control-Allow-Origin', '*');
+
   axios.post('https://github.com/login/oauth/access_token', data)
   .then((oauth_res) => {
     var token_data = url.parse('?' + oauth_res.data, /*parseQueryString*/ true);
     getName(token_data.query.access_token, (name) => {
-      listRepos(token_data.query.access_token, name, (repos) => {
-        responseData.name = name;
-        responseData.repos = repos;
-        res.setHeader('Access-Control-Allow-Origin', '*');
-        res.end(JSON.stringify(responseData));
+      var token = token_data.query.access_token;
+
+      responseData.name = name;
+
+      // Check user membership for an organization
+      axios.get('https://api.github.com/orgs/' + org_name + '/members/' + name, {
+        headers: {
+          'Authorization': 'token ' + token,
+        }
+      }).then(() => {
+        // User is inside the organization
+        listReposAdmin(token, (repos) => {
+          responseData.repos = repos;
+          res.end(JSON.stringify(responseData));
+        });
+      }).catch(() => {
+        // User is outside the organization
+        listRepos(token, name, (repos) => {
+          responseData.repos = repos;
+          res.end(JSON.stringify(responseData));
+        });
       });
     });
   }).catch((err) => {
