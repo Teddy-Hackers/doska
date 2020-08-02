@@ -42,8 +42,9 @@
       }
     }
 
-    function main() {
-    if (searchParams.has("code")) {
+    function request_data() {
+      $("#teddy").css("display", "inline");
+
       $.ajax({
         type: 'GET',
         dataType: 'json',
@@ -61,20 +62,31 @@
             fill_tasks_table(res.repos[name], res.view);
           });
         }
+        $("#teddy").css("display", "none");
+        $("#panel").css("visibility", "visible");
       });
 
       window.history.replaceState("", "", url.split('?')[0]);
-    } else {
-      // Redirect to GitHub login page
-      window.location.replace("https://github.com/login/oauth/authorize?client_id=Iv1.9ecbfe62c74137df");
     }
-  }
+
+    function main() {
+      if (searchParams.has("code")) {
+        request_data();
+      } else {
+        // Redirect to GitHub login page
+        window.location.replace("https://github.com/login/oauth/authorize?client_id=Iv1.9ecbfe62c74137df");
+      }
+    }
 
   </script>
 </head>
 
 <body onload="main()">
   <p id="myname" style="float: right"></p>
+
+  <div>
+    <img id="teddy" src="images/teddy.png">
+  </div>
 
   <div id="panel">
 
