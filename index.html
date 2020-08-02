@@ -1,23 +1,48 @@
 <html>
 
 <head>
-  <style>
-    table {
-      border-collapse: collapse;
-    }
-    table, th, td {
-      border: 1px solid black;
-      text-align: center;
-      padding: 5px;
-    }
-  </style>
-
   <!-- jQuery -->
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+
+  <link rel="stylesheet" type="text/css" href="style.css">
 
   <script type='text/javascript'>
     var url = window.location.href;
     var searchParams = new URLSearchParams(url.split('?')[1]);
+
+    function fill_tasks_table(data, view) {
+      var table = document.getElementById("tasks_table");
+      table.innerHTML = "";
+
+      function add_pr_ref(row, pull) {
+        var cell = row.insertCell();
+        cell.innerHTML = "<a href=" + pull.html_url + ">link</a>";;
+        if (pull.status.localeCompare("success") == 0) {
+          cell.bgColor = 'green';
+        } else if (pull.status.localeCompare("failure") == 0) {
+          cell.bgColor = 'red';
+        }
+      }
+
+      if (view.localeCompare("admin") == 0) {
+        // Admin view
+        for (name in data) {
+          var row = table.insertRow();
+          row.insertCell().innerHTML = name;
+          data[name].forEach((pull) => {
+            add_pr_ref(row, pull);
+          });
+        }
+      } else {
+        // User view
+        var row = table.insertRow();
+        data.forEach((pull) => {
+          add_pr_ref(row, pull);
+        });
+      }
+    }
+
+    function main() {
     if (searchParams.has("code")) {
       $.ajax({
         type: 'GET',
@@ -25,21 +50,15 @@
         url: "https://teddy-hackers-doska.herokuapp.com?code=" + searchParams.get("code"),
         // url: "http://localhost:56582/?code=" + searchParams.get("code"),
       }).done(function(res) {
-        $(myname).html("Hello, " + res.name + "!");
+        $("#myname").html("Hello, " + res.name + "!");
 
-        var table = document.getElementById("results");
-        for (name in res.repos) {
-          var row = table.insertRow();
-          row.insertCell().innerHTML = name;
-
-          res.repos[name].forEach((pull) => {
-            var cell = row.insertCell();
-            cell.innerHTML = "<a href=" + pull.html_url + ">link</a>";;
-            if (pull.status.localeCompare("success") == 0) {
-              cell.bgColor = 'green';
-            } else if (pull.status.localeCompare("failure") == 0) {
-              cell.bgColor = 'red';
-            }
+        var projects_table = document.getElementById("projects_table");
+        for (let name in res.repos) {
+          var project = projects_table.insertRow().insertCell();
+          project.innerHTML = name;
+          project.addEventListener("click", function() {
+            $("#project_title").html(name);
+            fill_tasks_table(res.repos[name], res.view);
           });
         }
       });
@@ -49,19 +68,34 @@
       // Redirect to GitHub login page
       window.location.replace("https://github.com/login/oauth/authorize?client_id=Iv1.9ecbfe62c74137df");
     }
+  }
 
   </script>
 </head>
 
-<body>
-  <p id="myname"></p><br>
+<body onload="main()">
+  <p id="myname" style="float: right"></p>
 
-  <table id="results"></table><br>
+  <div id="panel">
 
-  <form action="https://github.com/apps/doska-helper/installations/new">
-    <input type="submit" value="Add private repository" />
-  </form>
+    <div id="projects">
+      <p>Projects</p>
 
+      <form action="https://github.com/apps/doska-helper/installations/new">
+        <input type="submit" value="Add private repository" />
+      </form>
+
+      <table id="projects_table">
+      </table>
+    </div>
+
+    <div id="tasks">
+      <h1 id="project_title"></h1>
+      <table id="tasks_table">
+      </table>
+    </div>
+
+  </div>
 </body>
 
 </html>

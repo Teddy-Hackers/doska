@@ -1,0 +1,33 @@
+#tasks table {
+  border-collapse: collapse;
+}
+#tasks table, #tasks th, #tasks td {
+  border: 1px solid black;
+  text-align: center;
+  padding: 5px;
+}
+
+#panel {
+  display: flex;
+  max-height: 100%;
+}
+
+#projects {
+  width: 200px;
+  overflow-y: scroll;
+  margin-right: 10px;
+}
+#projects table, #projects th, #projects td {
+  line-height: 100px;
+  width: 100%;
+  border: 1px solid black;
+  border-collapse: collapse;
+}
+#projects tr:hover {
+  background-color: #b1c5cb;
+  cursor: pointer;
+}
+
+input {
+  cursor: pointer;
+}
