@@ -14,18 +14,30 @@
       var table = document.getElementById("tasks_table");
       table.innerHTML = "";
 
-      if (view.localeCompare("admin") == 0) {
+      function add_pr_ref(row, pull) {
+        var cell = row.insertCell();
+        cell.innerHTML = "<a href=" + pull.html_url + ">link</a>";;
+        if (pull.status.localeCompare("success") == 0) {
+          cell.bgColor = 'green';
+        } else if (pull.status.localeCompare("failure") == 0) {
+          cell.bgColor = 'red';
+        }
+      }
 
-      } else {  // User view
+      if (view.localeCompare("admin") == 0) {
+        // Admin view
+        for (name in data) {
+          var row = table.insertRow();
+          row.insertCell().innerHTML = name;
+          data[name].forEach((pull) => {
+            add_pr_ref(row, pull);
+          });
+        }
+      } else {
+        // User view
         var row = table.insertRow();
         data.forEach((pull) => {
-          var cell = row.insertCell();
-          cell.innerHTML = "<a href=" + pull.html_url + ">link</a>";;
-          if (pull.status.localeCompare("success") == 0) {
-            cell.bgColor = 'green';
-          } else if (pull.status.localeCompare("failure") == 0) {
-            cell.bgColor = 'red';
-          }
+          add_pr_ref(row, pull);
         });
       }
     }
@@ -45,6 +57,7 @@
           var project = projects_table.insertRow().insertCell();
           project.innerHTML = name;
           project.addEventListener("click", function() {
+            $("#project_title").html(name);
             fill_tasks_table(res.repos[name], res.view);
           });
         }
@@ -66,7 +79,7 @@
   <div id="panel">
 
     <div id="projects">
-      <p>Started projects</p>
+      <p>Projects</p>
 
       <form action="https://github.com/apps/doska-helper/installations/new">
         <input type="submit" value="Add private repository" />
@@ -77,24 +90,12 @@
     </div>
 
     <div id="tasks">
+      <h1 id="project_title"></h1>
       <table id="tasks_table">
-        <tr>
-          <th>Firstname</th>
-          <th>Lastname</th>
-          <th>Age</th>
-        </tr>
-        <tr>
-          <td>Jill</td>
-          <td>Smith</td>
-          <td>50</td>
-        </tr>
       </table>
     </div>
+
   </div>
-  <!-- <table id="results"></table><br>
-
-   -->
-
 </body>
 
 </html>

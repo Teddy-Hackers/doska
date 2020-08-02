@@ -138,13 +138,15 @@ function listRepos(token, user_name, callback) {
 }
 
 function listReposAdmin(token, callback) {
+  // TODO: multiple repositories
   repos_whitelist.forEach((repo) => {
     github_api_get('https://api.github.com/repos/' + org_name + '/' + repo + '/forks', token, (forks) => {
       var repos = {};
+      repos[repo] = {};
       var num = 0;
       forks.forEach((fork) => {
         listPulls(token, repo, fork.owner.login, (pulls) => {
-          repos[fork.owner.login] = pulls;
+          repos[repo][fork.owner.login] = pulls;
           num += 1;
           if (num == forks.length) {
             callback(repos);
@@ -185,6 +187,7 @@ http.createServer(function (req, res) {
         // User is inside the organization
         () => {
           listReposAdmin(token, (repos) => {
+            responseData.view = 'admin';
             responseData.repos = repos;
             res.end(JSON.stringify(responseData));
           });
@@ -193,6 +196,7 @@ http.createServer(function (req, res) {
         // User is outside the organization
         () => {
           listRepos(token, name, (repos) => {
+            responseData.view = 'student';
             responseData.repos = repos;
             res.end(JSON.stringify(responseData));
           });
