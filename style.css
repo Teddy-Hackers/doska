@@ -10,6 +10,7 @@
 #panel {
   display: flex;
   max-height: 100%;
+  visibility: hidden;
 }
 
 #projects {
@@ -30,4 +31,27 @@
 
 input {
   cursor: pointer;
+}
+
+#teddy {
+    width: 20%;
+    image-rendering: pixelated;    /* Chrome */
+    image-rendering: crisp-edges;  /* Firefox */
+    display: none;
+    /* center */
+    position: absolute;
+    top: 30%;
+    left: 40%;
+    /* animation */
+    -webkit-animation: fadein 0.8s linear infinite alternate;
+    outline: 1px solid transparent;
+}
+
+@-webkit-keyframes fadein{
+    from {
+       transform: rotate(10deg);
+    }
+    to {
+        transform: rotate(-10deg);
+    }
 }
