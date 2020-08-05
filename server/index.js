@@ -8,7 +8,7 @@ const lib    = require('common');
 const port = process.env.PORT || 80;
 const org_name = 'Teddy-Hackers'
 
-let repos_whitelist = fs.readdirSync('projects');
+let repos_whitelist = Object.keys(JSON.parse(fs.readFileSync('server/common/package.json')).dependencies);
 
 function getName(token, callback) {
   lib.github_api_get('https://api.github.com/user', token, (data) => {
@@ -79,7 +79,7 @@ function listRepos(token, user_name, callback) {
   }
 
   repos_whitelist.forEach(project => {
-    var project_lib = require('../projects/' + project + '/check.js');
+    var project_lib = require(project);
     project_lib.check(user_name, token, (tasks) => {
       repos[project] = tasks;
       inc();
@@ -91,7 +91,12 @@ function listReposAdmin(token, callback) {
   // TODO: multiple repositories
   repos_whitelist.forEach((repo) => {
     lib.github_api_get('https://api.github.com/repos/' + org_name + '/' + repo + '/forks', token, (forks) => {
-      var project_lib = require('../projects/' + repo + '/check.js');
+      if (forks.length == 0) {
+        callback(repos);
+        return;
+      }
+
+      var project_lib = require(repo);
       var repos = {};
       repos[repo] = {};
       var num = 0;
