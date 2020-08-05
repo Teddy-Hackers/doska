@@ -19,17 +19,8 @@ node server
 
 ### Add new projects to track
 
-Every project which is listed on dashboard should be added as submodule:
+To start project tracking, you need to add it to `server/common/package.json` file into `dependencies` section:
 
-```bash
-cd projects
-git submodule add -b master <url to repository>
-```
-
-**NOTE**: thanks to `-b` option the latest state of submodule's branch is used.
-
-To update local version of submodule, use
-
-```bash
-git submodule update --remote
+```json
+"practice_git": "https://github.com/Teddy-Hackers/practice_git"
 ```

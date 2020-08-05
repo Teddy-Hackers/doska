@@ -1,4 +1,7 @@
 {
   "name": "common",
-  "version": "1.0.0"
+  "version": "1.0.0",
+  "dependencies": {
+    "practice_git": "https://github.com/Teddy-Hackers/practice_git"
+  }
 }
