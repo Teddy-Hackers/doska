@@ -1,0 +1,4 @@
+[submodule "projects/practice_git"]
+	path = projects/practice_git
+	url = https://github.com/Teddy-Hackers/practice_git
+	branch = master
