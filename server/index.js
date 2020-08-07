@@ -90,13 +90,13 @@ function listRepos(token, user_name, callback) {
 function listReposAdmin(token, callback) {
   // TODO: multiple repositories
   repos_whitelist.forEach((repo) => {
+    var project_lib = require(repo);
     lib.github_api_get('https://api.github.com/repos/' + org_name + '/' + repo + '/forks', token, (forks) => {
       if (forks.length == 0) {
         callback(repos);
         return;
       }
 
-      var project_lib = require(repo);
       var repos = {};
       repos[repo] = {};
       var num = 0;

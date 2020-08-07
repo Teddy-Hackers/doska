@@ -2,7 +2,7 @@
   "name": "teddy-hackers-doska",
   "version": "1.0.0",
   "dependencies": {
-    "axios": "latest",
+    "axios": "^0.19.2",
     "common": "file:server/common"
   }
 }
