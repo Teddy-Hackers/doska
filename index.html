@@ -9,6 +9,9 @@
   <script type='text/javascript'>
     var url = window.location.href;
     var searchParams = new URLSearchParams(url.split('?')[1]);
+    if ('localhost'.localeCompare(searchParams.get('state')) == 0) {
+      window.location.replace('http://localhost:8000?code=' + searchParams.get('code'));
+    }
 
     function fill_tasks_table(data, view) {
       var table = document.getElementById("tasks_table");
@@ -74,7 +77,15 @@
         request_data();
       } else {
         // Redirect to GitHub login page
-        window.location.replace("https://github.com/login/oauth/authorize?client_id=Iv1.9ecbfe62c74137df");
+        var auth_url = "https://github.com/login/oauth/authorize?client_id=Iv1.9ecbfe62c74137df"
+        var is_localhost = url.split('?')[0].localeCompare('http://localhost:8000/') == 0;
+        if (is_localhost) {
+          // GitHub App support only one redirect URI. We don't want to have a
+          // separate App for local experiments so we pass an extra parameter
+          // to indicate that we wants to redirect to localhost (see on top).
+          auth_url += '&state=localhost'
+        }
+        window.location.replace(auth_url);
       }
     }
 
