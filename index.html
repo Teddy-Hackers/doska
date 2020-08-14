@@ -38,9 +38,24 @@
         }
       } else {
         // User view
-        var row = table.insertRow();
-        data.forEach((pull) => {
-          add_pr_ref(row, pull);
+        var projects_table = document.getElementById("projects_table");
+        projects_table.innerHTML = '';
+
+        data.forEach((task) => {
+          var row = projects_table.insertRow().insertCell();
+          row.innerHTML = task.name;
+
+          // Colorize
+          if (task.status.localeCompare("success") == 0) {
+            row.innerHTML = '<div class="passed_task">' + row.innerHTML + '</div>';
+          } else if (task.status.localeCompare("failure") == 0) {
+            row.bgColor = 'red';
+          }
+
+          // Show description by click
+          row.addEventListener("click", function() {
+            $("#task_description").html(task.description);
+          });
         });
       }
     }
@@ -133,6 +148,9 @@
       <h1 id="project_title"></h1>
       <table id="tasks_table">
       </table>
+
+      <div id="task_description">
+      </div>
     </div>
 
   </div>

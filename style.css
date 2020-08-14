@@ -79,3 +79,12 @@ input {
   height: 60px;
   font-family: "Arial";
 }
+.passed_task::after{
+    content: "";
+    display: inline-block;
+    width: 15px;
+    height: 15px;
+    border-radius: 3px;
+    margin-right: 10px;
+    background: green;
+}
