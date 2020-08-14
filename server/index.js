@@ -71,7 +71,7 @@ function listRepos(token, user_name, callback) {
   var repos = {};
 
   var num = 0;
-  function inc() {
+  function inc_project() {
     num += 1;
     if (num == repos_whitelist.length) {
       callback(repos);
@@ -81,8 +81,30 @@ function listRepos(token, user_name, callback) {
   repos_whitelist.forEach(project => {
     var project_lib = require(project);
     project_lib.check(user_name, token, (tasks) => {
-      repos[project] = tasks;
-      inc();
+      var task_id = 0;
+      function inc_task() {
+        task_id += 1;
+        if (task_id == tasks.length) {
+          repos[project] = tasks;
+          inc_project();
+        }
+      }
+      tasks.forEach(task => {
+        fs.readFile('node_modules/' + project + '/' + task.description, 'utf8', (err, file_data) => {
+          const data = {
+            text: file_data
+          }
+          axios.post('https://api.github.com/markdown', data, {
+            headers: {
+              'Authorization': 'token ' + token,
+            }
+          })
+          .then((res) => {
+            task.description = res.data;
+            inc_task();
+          });
+        })
+      });
     });
   });
 }
