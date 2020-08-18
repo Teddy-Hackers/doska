@@ -2,6 +2,7 @@
   "name": "common",
   "version": "1.0.0",
   "dependencies": {
-    "practice_git": "https://github.com/Teddy-Hackers/practice_git"
+    "practice_git": "https://github.com/Teddy-Hackers/practice_git",
+    "openvino_practice": "https://github.com/dkurt/openvino_practice"
   }
 }
