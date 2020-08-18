@@ -20,9 +20,13 @@
 
       function add_pr_ref(row, pull) {
         var cell = row.insertCell();
-        cell.innerHTML = "<a href=" + pull.html_url + ">link</a>";;
+        if (pull.html_url) {
+          cell.innerHTML = "<a href=" + pull.html_url + ">link</a>";;
+        }
         if (pull.status.localeCompare("success") == 0) {
           cell.bgColor = 'green';
+        } else if (pull.status.localeCompare("progress") == 0) {
+          cell.bgColor = 'yellow';
         } else if (pull.status.localeCompare("failure") == 0) {
           cell.bgColor = 'red';
         }
@@ -30,9 +34,18 @@
 
       if (view.localeCompare("admin") == 0) {
         // Admin view
+        let header = table.insertRow();
+        header.insertCell().innerHTML = 'User name';
+        for (name in data) {
+          data[name].forEach((task) => {
+            header.insertCell().innerHTML = task.name;
+          });
+          break;
+        }
+
         for (name in data) {
           var row = table.insertRow();
-          row.insertCell().innerHTML = name;
+          row.insertCell().innerHTML = '<a href=https://github.com/' + name + '>' + name + '</a>';
           data[name].forEach((pull) => {
             add_pr_ref(row, pull);
           });

@@ -110,28 +110,22 @@ function listRepos(token, user_name, callback) {
 }
 
 function listReposAdmin(token, callback) {
-  // TODO: multiple repositories
+  let repos = {};
+  let num = 0;
+  function inc() {
+    num += 1;
+    if (num == repos_whitelist.length) {
+      callback(repos);
+    }
+  }
+
   repos_whitelist.forEach((repo) => {
     var project_lib = require(repo);
-    lib.github_api_get('https://api.github.com/repos/' + org_name + '/' + repo + '/forks', token, (forks) => {
-      if (forks.length == 0) {
-        callback(repos);
-        return;
-      }
 
-      var repos = {};
-      repos[repo] = {};
-      var num = 0;
-      forks.forEach((fork) => {
-        project_lib.check(fork.owner.login, token, (tasks) => {
-          repos[repo][fork.owner.login] = tasks;
-          num += 1;
-          if (num == forks.length) {
-            callback(repos);
-          }
-        });
-      });
-    }, (err) => {/*ignore missed repos*/});
+    project_lib.checkAll(token, (tasks) => {
+      repos[repo] = tasks;
+      inc();
+    });
   });
 }
 
