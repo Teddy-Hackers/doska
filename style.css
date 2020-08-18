@@ -23,10 +23,10 @@
 }
 
 #projects_table_area {
-  width: 200px;
+  width: 250px;
   overflow-y: scroll;
   max-height: 85%;
-  direction: rtl;
+  direction: ltr;
 }
 #projects table, #projects th, #projects td {
   line-height: 100px;
@@ -79,7 +79,7 @@ input {
   height: 60px;
   font-family: "Arial";
 }
-.passed_task::after{
+.passed_task::before{
     content: "";
     display: inline-block;
     width: 15px;
