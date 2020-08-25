@@ -67,6 +67,23 @@ function listPulls(token, repo, user, callback) {
   });
 }
 
+// Method which replaces localpaths to web URL
+function getWebURL(base, link) {
+  // Go to basedir
+  base = base.substring(0, base.lastIndexOf('/'));
+  while (true) {
+    let idx = link.indexOf('/');
+    let level = link.substring(0, idx);
+    if (level.localeCompare('..') == 0) {
+      link = link.substring(idx + 1);
+      base = base.substring(0, base.lastIndexOf('/'));
+    } else {
+      break;
+    }
+  }
+  return base + '/' + link;
+}
+
 function listRepos(token, user_name, callback) {
   var repos = {};
 
@@ -100,7 +117,10 @@ function listRepos(token, user_name, callback) {
             }
           })
           .then((res) => {
-            task.description = res.data;
+            // Replace all links excluding ones which start from http/https
+            task.description = res.data.replace(/src=['"](?!http)(.*?)['"]/g, (data, link) => {
+              return 'src="' + getWebURL('https://raw.githubusercontent.com/dkurt/openvino_practice/master/modules/1_opencv/README.md', link) + '"';
+            });
             inc_task();
           });
         })
