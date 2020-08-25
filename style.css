@@ -88,3 +88,11 @@ input {
     margin-right: 10px;
     background: green;
 }
+
+#search_repos{
+  height: 25px;
+  width: 90%;
+  border-radius: 10px;
+  margin-bottom: 10px;
+  box-shadow: 3px 7px 11px -7px black;
+}
