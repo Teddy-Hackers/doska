@@ -90,9 +90,10 @@ input {
 }
 
 #search_repos{
-  height: 25px;
+  height: 30px;
   width: 90%;
   border-radius: 10px;
   margin-bottom: 10px;
   box-shadow: 3px 7px 11px -7px black;
+  cursor: text;
 }
