@@ -97,3 +97,7 @@ input {
   box-shadow: 3px 7px 11px -7px black;
   cursor: text;
 }
+
+#search_user{  
+  cursor: text;
+}

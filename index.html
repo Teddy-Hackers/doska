@@ -14,6 +14,14 @@
       window.location.replace('http://localhost:8000?code=' + searchParams.get('code'));
     }
 
+    function blind_elems(row_list, text_value){
+      row_list.filter = [].filter
+        hide_nodes = row_list.filter((elem)=>!elem.innerHTML.includes(text_value))
+        hide_nodes.forEach((elem)=> $(elem).css('display','none'))
+        visible_nodes = row_list.filter((elem)=>elem.innerHTML.includes(text_value))
+        visible_nodes.forEach((elem)=> $(elem).css('display',''))
+    }
+
     function fill_tasks_table(data, view) {
       var table = document.getElementById("tasks_table");
       table.innerHTML = "";
@@ -35,7 +43,19 @@
       if (view.localeCompare("admin") == 0) {
         // Admin view
         let header = table.insertRow();
-        header.insertCell().innerHTML = 'User name';
+
+        // input node
+        const search_users_field = document.createElement("input");
+        search_users_field.setAttribute("id","search_user");
+        search_users_field.setAttribute("placeholder","User name");
+        search_users_field.addEventListener('input', function(e){    
+        let tmp = $("#tasks_table > tbody > tr")
+        // filtering not for first row
+        tmp = tmp.slice(1);
+        blind_elems(tmp, this.value)
+      }) 
+
+        header.insertCell().append(search_users_field)
         for (name in data) {
           data[name].forEach((task) => {
             header.insertCell().innerHTML = task.name;
@@ -171,13 +191,7 @@
 </body>
 <script>
 document.getElementById("search_repos").addEventListener('input', function(e){
-    
-    let tmp = $("#projects_table > tbody > tr")
-    tmp.filter = [].filter
-    hide_nodes = tmp.filter((elem)=>!elem.innerHTML.includes(this.value))
-    hide_nodes.forEach((elem)=> $(elem).css('display','none'))
-    visible_nodes = tmp.filter((elem)=>elem.innerHTML.includes(this.value))
-    visible_nodes.forEach((elem)=> $(elem).css('display',''))
+    blind_elems($("#projects_table > tbody > tr"), this.value)
   }) 
 </script>
 </html>
