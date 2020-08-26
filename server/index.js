@@ -8,7 +8,7 @@ const lib    = require('common');
 const port = process.env.PORT || 80;
 const org_name = 'Teddy-Hackers'
 
-let repos_whitelist = Object.keys(JSON.parse(fs.readFileSync('server/common/package.json')).dependencies);
+let repos_whitelist = JSON.parse(fs.readFileSync('server/common/package.json')).dependencies;
 
 function getName(token, callback) {
   lib.github_api_get('https://api.github.com/user', token, (data) => {
@@ -67,18 +67,35 @@ function listPulls(token, repo, user, callback) {
   });
 }
 
+// Method which replaces localpaths to web URL
+function getWebURL(base, link) {
+  // Go to basedir
+  base = base.substring(0, base.lastIndexOf('/'));
+  while (true) {
+    let idx = link.indexOf('/');
+    let level = link.substring(0, idx);
+    if (level.localeCompare('..') == 0) {
+      link = link.substring(idx + 1);
+      base = base.substring(0, base.lastIndexOf('/'));
+    } else {
+      break;
+    }
+  }
+  return base + '/' + link;
+}
+
 function listRepos(token, user_name, callback) {
   var repos = {};
 
   var num = 0;
   function inc_project() {
     num += 1;
-    if (num == repos_whitelist.length) {
+    if (num == Object.keys(repos_whitelist).length) {
       callback(repos);
     }
   }
 
-  repos_whitelist.forEach(project => {
+  Object.entries(repos_whitelist).forEach(([project, project_url]) => {
     var project_lib = require(project);
     project_lib.check(user_name, token, (tasks) => {
       var task_id = 0;
@@ -89,8 +106,16 @@ function listRepos(token, user_name, callback) {
           inc_project();
         }
       }
+
+      // Modify project URL so it can be used for direct access to images
+      project_url = project_url.replace('github.com', 'raw.githubusercontent.com') + '/master/'
+
       tasks.forEach(task => {
         fs.readFile('node_modules/' + project + '/' + task.description, 'utf8', (err, file_data) => {
+          // Replace all links excluding ones which start with http/https
+          file_data = file_data.replace(/(src=['"]|\!\[.*\]\()(?!http)(.*?)(['")])/g, (data, prefix, link, suffix) => {
+            return prefix + getWebURL(project_url + task.description, link) + suffix;
+          });
           const data = {
             text: file_data
           }
@@ -114,12 +139,12 @@ function listReposAdmin(token, callback) {
   let num = 0;
   function inc() {
     num += 1;
-    if (num == repos_whitelist.length) {
+    if (num == Object.keys(repos_whitelist).length) {
       callback(repos);
     }
   }
 
-  repos_whitelist.forEach((repo) => {
+  Object.keys(repos_whitelist).forEach((repo) => {
     var project_lib = require(repo);
 
     project_lib.checkAll(token, (tasks) => {
