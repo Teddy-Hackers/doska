@@ -14,11 +14,11 @@
       window.location.replace('http://localhost:8000?code=' + searchParams.get('code'));
     }
 
-    function blind_elems(row_list, text_value){
-      row_list.filter = [].filter
-        hide_nodes = row_list.filter((elem)=>!elem.innerHTML.includes(text_value))
+    function blind_elems(row_list, text_value) {
+        row_list.filter = [].filter
+        hide_nodes = row_list.filter((elem)=>!elem.innerHTML.toLowerCase().includes(text_value.toLowerCase()))
         hide_nodes.forEach((elem)=> $(elem).css('display','none'))
-        visible_nodes = row_list.filter((elem)=>elem.innerHTML.includes(text_value))
+        visible_nodes = row_list.filter((elem)=>elem.innerHTML.toLowerCase().includes(text_value.toLowerCase()))
         visible_nodes.forEach((elem)=> $(elem).css('display',''))
     }
 
@@ -46,8 +46,8 @@
 
         // input node
         const search_users_field = document.createElement("input");
-        search_users_field.setAttribute("id","search_user");
-        search_users_field.setAttribute("placeholder","User name");
+        search_users_field.setAttribute("id", "search_user");
+        search_users_field.setAttribute("placeholder", "User name");
         search_users_field.addEventListener('input', function(e){    
         let tmp = $("#tasks_table > tbody > tr")
         // filtering not for first row
