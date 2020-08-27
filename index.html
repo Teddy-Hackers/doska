@@ -2,7 +2,7 @@
 
 <head>
   <!-- jQuery -->
-  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+  <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
 
   <link rel="stylesheet" type="text/css" href="style.css">
   <link rel="stylesheet" type="text/css" href="github-markdown.css">
@@ -12,6 +12,14 @@
     var searchParams = new URLSearchParams(url.split('?')[1]);
     if ('localhost'.localeCompare(searchParams.get('state')) == 0) {
       window.location.replace('http://localhost:8000?code=' + searchParams.get('code'));
+    }
+
+    function blind_elems(row_list, text_value) {
+        row_list.filter = [].filter
+        hide_nodes = row_list.filter((elem)=>!elem.innerHTML.toLowerCase().includes(text_value.toLowerCase()))
+        hide_nodes.forEach((elem)=> $(elem).css('display','none'))
+        visible_nodes = row_list.filter((elem)=>elem.innerHTML.toLowerCase().includes(text_value.toLowerCase()))
+        visible_nodes.forEach((elem)=> $(elem).css('display',''))
     }
 
     function fill_tasks_table(data, view) {
@@ -35,7 +43,19 @@
       if (view.localeCompare("admin") == 0) {
         // Admin view
         let header = table.insertRow();
-        header.insertCell().innerHTML = 'User name';
+
+        // input node
+        const search_users_field = document.createElement("input");
+        search_users_field.setAttribute("id", "search_user");
+        search_users_field.setAttribute("placeholder", "User name");
+        search_users_field.addEventListener('input', function(e){    
+        let tmp = $("#tasks_table > tbody > tr")
+        // filtering not for first row
+        tmp = tmp.slice(1);
+        blind_elems(tmp, this.value)
+      }) 
+
+        header.insertCell().append(search_users_field)
         for (name in data) {
           data[name].forEach((task) => {
             header.insertCell().innerHTML = task.name;
@@ -149,7 +169,7 @@
       <form action="https://github.com/apps/doska-helper/installations/new">
         <input type="submit" value="Add private repository" />
       </form>
-
+      <input id="search_repos" placeholder='Write project name'>
       <div id="projects_table_area">
         <table id="projects_table">
         </table>
@@ -169,5 +189,9 @@
 
   </div>
 </body>
-
+<script>
+document.getElementById("search_repos").addEventListener('input', function(e){
+    blind_elems($("#projects_table > tbody > tr"), this.value)
+  }) 
+</script>
 </html>
